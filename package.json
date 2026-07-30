@@ -1,14 +1,17 @@
 {
   "name": "wanderlus-server",
   "version": "1.0.0",
+  "description": "",
   "main": "index.js",
-  "type": "commonjs",
   "scripts": {
     "dev": "nodemon index.js",
     "start": "node index.js",
-    "build": "echo \"No build step required\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
   "dependencies": {
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
