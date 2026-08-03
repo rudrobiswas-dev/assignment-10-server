@@ -221,25 +221,78 @@ const JWKS = createRemoteJWKSet(
   new URL(`${process.env.CLIENT_URL}/api/auth/jwks`),
 );
 
+// const verifyToken = async (req, res, next) => {
+//   const authHeader = req.headers.authorization;
+
+//   if (!authHeader || !authHeader.startsWith("Bearer ")) {
+//     res.status(401).send({ msg: "Unauthorized" });
+//   }
+//   // "Bearer zjxashsahjdhj".split(" ") // ["Bearer", "xsghagshsf"]
+//   const token = authHeader.split(" ")[1];
+//   if (!token) {
+//     res.status(401).send({ msg: "Unauthorized" });
+//   }
+
+//   try {
+//     const { payload } = await jwtVerify(token, JWKS);
+//     req.user = payload
+//     next();
+//   } catch (error) {
+//     console.log(error);
+//     res.status(401).send({ msg: "Unauthorized" });
+//   }
+
+// };
 const verifyToken = async (req, res, next) => {
+
   const authHeader = req.headers.authorization;
 
+
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    res.status(401).send({ msg: "Unauthorized" });
-  }
-  // "Bearer zjxashsahjdhj".split(" ") // ["Bearer", "xsghagshsf"]
-  const token = authHeader.split(" ")[1];
-  if (!token) {
-    res.status(401).send({ msg: "Unauthorized" });
+
+    return res.status(401).send({
+      msg: "Unauthorized"
+    });
+
   }
 
+
+  const token = authHeader.split(" ")[1];
+
+
+  if (!token) {
+
+    return res.status(401).send({
+      msg: "Unauthorized"
+    });
+
+  }
+
+
+
   try {
-    const { payload } = await jwtVerify(token, JWKS);
-    req.user = payload
+
+    const { payload } = await jwtVerify(
+      token,
+      JWKS
+    );
+
+
+    req.user = payload;
+
+
     next();
-  } catch (error) {
+
+
+  } catch(error){
+
     console.log(error);
-    res.status(401).send({ msg: "Unauthorized" });
+
+
+    return res.status(401).send({
+      msg:"Invalid Token"
+    });
+
   }
 
 };
@@ -247,12 +300,159 @@ const verifyToken = async (req, res, next) => {
 async function run() {
   try {
     await client.connect();
-    const db = client.db("tech-bazaar");
+    const db = client.db("blacksmith");
     const subscriptionCollection = db.collection("subscription");
     const paymentCollection = db.collection("payment");
     const userCollection = db.collection("user");
     const productCollection = db.collection("products");
+    const forumCollection = db.collection("forumPosts");
 
+    
+    // Create forum post
+app.post("/forum-posts", async (req, res) => {
+
+  try {
+
+    const data = req.body;
+
+
+    const post = {
+      title:data.title,
+      category:data.category,
+      description:data.description,
+      image:data.image,
+      authorName:data.authorName,
+      authorEmail:data.authorEmail,
+      authorRole:data.authorRole,
+      createdAt:new Date()
+    };
+
+
+    const result = await forumCollection.insertOne(post);
+
+
+    res.send(result);
+
+
+  } catch(error){
+
+    console.log(error);
+
+    res.status(500).send({
+      message:"Failed to create forum post"
+    });
+
+  }
+
+});
+
+// Get all forum posts
+app.get("/forum-posts", async (req, res) => {
+  try {
+
+    const result = await forumCollection
+      .find()
+      .sort({
+        createdAt: -1,
+      })
+      .toArray();
+
+
+    res.send(result);
+
+  } catch(error){
+
+    console.log(error);
+
+    res.status(500).send({
+      message:"Failed to get forum posts"
+    });
+
+  }
+});
+
+// Get single forum post
+app.get("/forum-posts/:id", async(req,res)=>{
+
+  try{
+
+    const {id}=req.params;
+
+
+    if(!ObjectId.isValid(id)){
+      return res.status(400).send({
+        message:"Invalid post id"
+      });
+    }
+
+
+    const post = await forumCollection.findOne({
+      _id:new ObjectId(id)
+    });
+
+
+    if(!post){
+      return res.status(404).send({
+        message:"Post not found"
+      });
+    }
+
+
+    res.send(post);
+
+
+  }catch(error){
+
+    console.log(error);
+
+    res.status(500).send({
+      message:"Server error"
+    });
+
+  }
+
+});
+
+app.patch("/forum-posts/:id", verifyToken, async(req,res)=>{
+
+  const {id}=req.params;
+
+  const data=req.body;
+
+
+  const result = await forumCollection.updateOne(
+    {
+      _id:new ObjectId(id)
+    },
+    {
+      $set:data
+    }
+  );
+
+
+  res.send(result);
+
+});
+
+app.delete("/forum-posts/:id", verifyToken, async(req,res)=>{
+
+ const {id}=req.params;
+
+
+ const result = await forumCollection.deleteOne({
+    _id:new ObjectId(id)
+ });
+
+
+ res.send(result);
+
+});
+    
+    
+    
+    
+    
+    // ok
     app.post("/subscription", async (req, res) => {
       const { user, session_id } = req.body;
 
