@@ -246,55 +246,32 @@ const JWKS = createRemoteJWKSet(
 const verifyToken = async (req, res, next) => {
 
   const authHeader = req.headers.authorization;
-
-
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-
     return res.status(401).send({
       msg: "Unauthorized"
     });
 
   }
-
-
   const token = authHeader.split(" ")[1];
-
-
   if (!token) {
-
     return res.status(401).send({
       msg: "Unauthorized"
     });
 
   }
-
-
-
   try {
-
     const { payload } = await jwtVerify(
       token,
       JWKS
     );
-
-
     req.user = payload;
-
-
     next();
-
-
   } catch(error){
-
     console.log(error);
-
-
     return res.status(401).send({
       msg:"Invalid Token"
     });
-
   }
-
 };
 
 async function run() {
