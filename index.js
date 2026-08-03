@@ -572,6 +572,10 @@ app.get("/", (req, res) => {
   res.send("Server is running fine!");
 });
 
+app.get("/test", (req,res)=>{
+  res.send("API working");
+});
+
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
